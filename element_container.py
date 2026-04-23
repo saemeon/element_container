@@ -1,72 +1,68 @@
-# %%
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Union
 
 
 class ElementContainerMeta(type):
-    _element_type: type = NotImplemented
+    """Metaclass giving container classes a hierarchical ``str`` / ``repr``.
 
-    def __str__(self) -> str:
-        return self._element_ctnr_str(self)
+    A container subclass sets ``_element_type`` to a type (or tuple of types).
+    Class attributes whose value matches ``_element_type`` are listed as
+    *elements*; nested classes that also use this metaclass are recursed into.
 
-    def __repr__(self) -> str:
-        return self._element_ctnr_str(self)
+    Override ``_ctnr_formatter`` / ``_element_formatter`` to customise rendering.
+    """
+
+    _element_type: type | tuple[type, ...]
+
+    def __str__(cls) -> str:
+        return cls._element_ctnr_str(cls)
+
+    def __repr__(cls) -> str:
+        return cls._element_ctnr_str(cls)
 
     @staticmethod
-    def _element_ctnr_str(ctnr: ElementContainerMeta, indent: int = 0) -> str:
-        # header = indent * "\t" + f"{ctnr.__name__}: {ctnr.__doc__  or ''}" +"\n"
+    def _element_ctnr_str(ctnr, indent: int = 0) -> str:
         header = indent * "\t" + ctnr._ctnr_formatter(ctnr) + "\n"
-        elements_str = ctnr._elements_str(ctnr, indent + 1)
-        nested_ctnrs_str = ""
+        elements = ctnr._elements_str(ctnr, indent + 1)
+        nested = ""
         for key, val in vars(ctnr).items():
-            if isinstance(val, ElementContainerMeta) and (not key.startswith("__")):
-                nested_ctnrs_str += ctnr._element_ctnr_str(val, indent + 1)
-        return header + elements_str + nested_ctnrs_str
+            if isinstance(val, ElementContainerMeta) and not key.startswith("__"):
+                nested += ctnr._element_ctnr_str(val, indent + 1)
+        return header + elements + nested
 
     @staticmethod
-    def _elements_str(ctnr: ElementContainerMeta, indent: int = 1) -> str:
-        elements_str = ""
+    def _elements_str(ctnr, indent: int = 1) -> str:
+        out = ""
         for key, val in vars(ctnr).items():
-            if isinstance(val, ctnr._element_type) and (not key.startswith("__")):
-                elements_str += indent * "\t" + ctnr._element_formatter(key, val) + "\n"
-                # elements_str += indent * "\t" + f"{key}: {repr(val)}" + "\n"
-        return elements_str
+            if isinstance(val, ctnr._element_type) and not key.startswith("__"):
+                out += indent * "\t" + ctnr._element_formatter(key, val) + "\n"
+        return out
 
     @staticmethod
     def _ctnr_formatter(ctnr) -> str:
-        """Default container string formatter."""
-        return f"{ctnr.__name__}: {ctnr.__doc__  or ''}"
+        return f"{ctnr.__name__}: {ctnr.__doc__ or ''}"
 
     @staticmethod
     def _element_formatter(key, val) -> str:
-        """Default element string formatter."""
-        return f"{key}: {repr(val)}"
+        return f"{key}: {val!r}"
 
 
 class PathContainer(metaclass=ElementContainerMeta):
     _element_type = Path
 
     @staticmethod
-    def _ctnr_formatter(ctnr) -> str:
-        """Default container string formatter."""
-        return f"adfa{ctnr.__name__}: {ctnr.__doc__  or ''}"
-
-    @staticmethod
-    def _element_formatter(key, val) -> str:
+    def _element_formatter(key, val: Path) -> str:
         return f"{key}: {val.absolute()}"
 
 
 class StrContainer(metaclass=ElementContainerMeta):
-    _element_type: type = str
+    _element_type = str
 
 
 class IDContainer(metaclass=ElementContainerMeta):
-    _element_type = Union[
-        str,
-        int,
-    ]
+    _element_type = (str, int)
 
 
 class FunctionContainer(metaclass=ElementContainerMeta):

@@ -1,69 +1,60 @@
 # %%
-from element_container import *
+from pathlib import Path
+
+from element_container import (
+    FunctionContainer,
+    IDContainer,
+    PathContainer,
+    StrContainer,
+)
 
 
-class IdContainer(StrContainer):
-    a = "str"
-    b = "asdlfkjasdf"
-    c = 29023
-    d = True
-    e = 3.2
+class paths(PathContainer):
+    """All project paths.
 
-    class funcontainer(FunctionContainer):
-        a = lambda x: x**2
-
-    class ze(StrContainer):
-        key = "adlsfkj"
-        hash = "lkdfja"
-        fdate = "kdfjalsdfj"
-
-    class P(PathContainer):
-        """documentation P paths."""
-
-        root = Path("dir")
-        c = root / "c"
-        d = root / "d"
-
-
-class D(PathContainer):
-    """documentation D doc"""
-
-    c = Path("d/e")
-    d = Path("e/f")
-
-
-class paths1(PathContainer):
-    """Container holding all paths of the project.
-
-    The container allows autocompletion by dotaccess similar to python package and module access.
-    It contains both "raw" paths and nested path containers.
+    Dot-access with IDE autocompletion, like a module tree of constants.
     """
 
-    a = Path("b/c")
-    """a doc"""
-    b = Path("c/d")
-    """b doc """
+    root = Path("project")
+    readme = root / "README.md"
 
-    class P(PathContainer):
-        """documentation P paths."""
+    class data(PathContainer):
+        """Data subtree."""
 
-        root = Path("dir")
-        c = root / "c"
-        d = root / "d"
+        root = Path("project/data")
+        raw = root / "raw"
+        processed = root / "processed"
 
-    class O(PathContainer):
-        """`O:` netdrive"""
+    class src(PathContainer):
+        """Source subtree."""
 
-        c = Path("d/e")
-        d = Path("e/f")
+        root = Path("project/src")
+        main = root / "main.py"
 
-        class C(PathContainer):
-            c = Path("d/e")
-            d = Path("e/f")
 
-        D = D
+class labels(StrContainer):
+    """Human-readable labels."""
+
+    user = "User"
+    session = "Session"
+
+
+class ids(IDContainer):
+    """Mixed str / int identifiers."""
+
+    alice = "u_alice"
+    bob = 42
+
+
+class ops(FunctionContainer):
+    """Small inline callables."""
+
+    square = lambda x: x**2  # noqa: E731
+    double = lambda x: x * 2  # noqa: E731
 
 
 # %%
-paths1
-# %%
+print(paths)
+print(labels)
+print(ids)
+print(ops)
